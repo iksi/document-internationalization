@@ -10,7 +10,7 @@ import {
   useToast,
 } from '@sanity/ui'
 import {uuid} from '@sanity/uuid'
-import {useCallback} from 'react'
+import {useCallback,useState} from 'react'
 import {SanityDocument, useClient} from 'sanity'
 
 import {API_VERSION, METADATA_SCHEMA_NAME} from '../constants'
@@ -52,6 +52,7 @@ export default function LanguageOption(props: LanguageOptionProps) {
     useDocumentInternationalizationContext()
   const client = useClient({apiVersion})
   const toast = useToast()
+  const [isCreating, setIsCreating] = useState(false)
 
   const open = useOpenInNewPane(translation?.value?._ref, schemaType)
   const handleOpen = useCallback(() => open(), [open])
@@ -68,6 +69,10 @@ export default function LanguageOption(props: LanguageOptionProps) {
     if (!metadataId) {
       throw new Error(`Cannot create translation without a metadata ID`)
     }
+
+    if (isCreating) return
+
+    setIsCreating(true)
 
     const transaction = client.transaction()
 
@@ -137,6 +142,9 @@ export default function LanguageOption(props: LanguageOptionProps) {
           description: err.message,
         })
       })
+      .finally {
+        setIsCreating(false)
+      }
   }, [
     client,
     documentId,
